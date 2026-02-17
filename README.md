@@ -1,2 +1,2 @@
-# mongodb
-all things MongoDB
+# MongoDB
+all things MongoDB by Mark Kirpichnikov
