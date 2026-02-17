@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Is MongoDB Right for Your Workload?</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --mongo-green: #00ED64;
+    --mongo-dark-green: #00684A;
+    --mongo-forest: #001E2B;
+    --mongo-slate: #1C2D38;
+    --mongo-mist: #E3FCF7;
+    --card-bg: #0A1F2B;
+    --card-border: rgba(0, 237, 100, 0.12);
+    --text-primary: #F0F5F3;
+    --text-secondary: #8CA4A0;
+    --text-dim: #566E6A;
+    --alt-amber: #FFC010;
+    --alt-border: rgba(255, 192, 16, 0.15);
+    --alt-bg: rgba(255, 192, 16, 0.04);
+    --line-color: rgba(0, 237, 100, 0.08);
+  }
+
+  body {
+    font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+    background: var(--mongo-forest);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Subtle grid texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--line-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line-color) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 56px 28px 72px;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    margin-bottom: 56px;
+  }
+
+  .header .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--mongo-green);
+    margin-bottom: 16px;
+    opacity: 0.7;
+  }
+
+  .header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+  }
+
+  .header .subtitle {
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  /* ── Flow ── */
+  .flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* ── Connector lines ── */
+  .connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 48px;
+    position: relative;
+  }
+
+  .connector::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, var(--mongo-green) 0%, rgba(0, 237, 100, 0.15) 100%);
+  }
+
+  .connector .yes-pill {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--mongo-green);
+    background: rgba(0, 237, 100, 0.08);
+    border: 1px solid rgba(0, 237, 100, 0.2);
+    border-radius: 20px;
+    padding: 3px 14px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ── Question cards ── */
+  .question-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 28px 32px;
+    position: relative;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .question-card:hover {
+    border-color: rgba(0, 237, 100, 0.25);
+    box-shadow: 0 0 40px rgba(0, 237, 100, 0.04);
+  }
+
+  .question-card .step-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+
+  .question-card .question-text {
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.45;
+    color: var(--text-primary);
+    margin-bottom: 14px;
+  }
+
+  .question-card .question-hint {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    margin-bottom: 20px;
+  }
+
+  /* ── MongoDB answer row ── */
+  .answer-row {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .answer-mongo {
+    flex: 1;
+    background: rgba(0, 237, 100, 0.04);
+    border: 1px solid rgba(0, 237, 100, 0.15);
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .answer-mongo .mongo-icon {
+    width: 22px;
+    height: 22px;
+    background: var(--mongo-green);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+    font-size: 12px;
+    color: var(--mongo-forest);
+    font-weight: 700;
+  }
+
+  .answer-mongo .answer-content {
+    flex: 1;
+  }
+
+  .answer-mongo .answer-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--mongo-green);
+    margin-bottom: 3px;
+  }
+
+  .answer-mongo .answer-text {
+    font-size: 13px;
+    color: var(--text-primary);
+    line-height: 1.5;
+  }
+
+  .answer-alt {
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--alt-bg);
+    border: 1px solid var(--alt-border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+
+  .answer-alt .alt-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--alt-amber);
+    margin-bottom: 3px;
+    opacity: 0.8;
+  }
+
+  .answer-alt .alt-text {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .answer-alt .alt-tools {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  /* ── Final verdict ── */
+  .verdict {
+    margin-top: 56px;
+    text-align: center;
+    padding: 40px 36px;
+    background: linear-gradient(160deg, rgba(0, 104, 74, 0.1) 0%, rgba(0, 237, 100, 0.03) 100%);
+    border: 1px solid rgba(0, 237, 100, 0.12);
+    border-radius: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .verdict::before {
+    content: '';
+    position: absolute;
+    top: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(0, 237, 100, 0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .verdict .leaf {
+    font-size: 36px;
+    margin-bottom: 12px;
+  }
+
+  .verdict .stat-line {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--mongo-green);
+    margin-bottom: 16px;
+  }
+
+  .verdict .verdict-text {
+    font-size: 15px;
+    color: var(--text-primary);
+    line-height: 1.7;
+    max-width: 580px;
+    margin: 0 auto 20px;
+  }
+
+  .verdict .verdict-text strong {
+    color: var(--mongo-green);
+    font-weight: 600;
+  }
+
+  .verdict .footnote {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    max-width: 540px;
+    margin: 0 auto;
+    padding-top: 16px;
+    border-top: 1px solid rgba(0, 237, 100, 0.08);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .container { padding: 36px 16px 48px; }
+    .header h1 { font-size: 24px; }
+    .question-card { padding: 20px 20px; }
+    .question-card .question-text { font-size: 16px; }
+    .answer-row { flex-direction: column; }
+    .answer-alt { width: 100%; }
+  }
+
+  /* ── Entrance animations ── */
+  .flow > * {
+    opacity: 0;
+    transform: translateY(16px);
+    animation: fadeSlideIn 0.5s ease forwards;
+  }
+  .flow > *:nth-child(1) { animation-delay: 0.1s; }
+  .flow > *:nth-child(2) { animation-delay: 0.2s; }
+  .flow > *:nth-child(3) { animation-delay: 0.3s; }
+  .flow > *:nth-child(4) { animation-delay: 0.4s; }
+  .flow > *:nth-child(5) { animation-delay: 0.5s; }
+  .flow > *:nth-child(6) { animation-delay: 0.6s; }
+  .flow > *:nth-child(7) { animation-delay: 0.7s; }
+  .flow > *:nth-child(8) { animation-delay: 0.8s; }
+  .flow > *:nth-child(9) { animation-delay: 0.9s; }
+  .flow > *:nth-child(10) { animation-delay: 1.0s; }
+  .flow > *:nth-child(11) { animation-delay: 1.1s; }
+  .flow > *:nth-child(12) { animation-delay: 1.2s; }
+  .flow > *:nth-child(13) { animation-delay: 1.3s; }
+
+  @keyframes fadeSlideIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <div class="eyebrow">Database Selection Framework</div>
+    <h1>Is MongoDB Right for Your Workload?</h1>
+    <p class="subtitle">An objective decision framework to evaluate your database requirements. Follow the path that matches your needs.</p>
+  </div>
+
+  <div class="flow">
+
+    <!-- Q1 -->
+    <div class="question-card">
+      <div class="step-num">Question 01</div>
+      <div class="question-text">Will this service require ongoing development and frequent feature releases?</div>
+      <div class="question-hint">Most modern applications evolve continuously — new features, changing requirements, iterative delivery cycles.</div>
+      <div class="answer-row">
+        <div class="answer-mongo">
+          <div class="mongo-icon">✓</div>
+          <div class="answer-content">
+            <div class="answer-label">Yes → MongoDB</div>
+            <div class="answer-text">The flexible document model means schema changes ship with your code — no migrations, no downtime. Release often and iterate fast.</div>
+          </div>
+        </div>
+        <div class="answer-alt" style="background: rgba(0, 237, 100, 0.03); border-color: rgba(0, 237, 100, 0.1);">
+          <div class="alt-label" style="color: var(--text-secondary);">If No</div>
+          <div class="alt-text">PostgreSQL or legacy RDBMS can work here — but so does MongoDB, with optional schema validation to enforce structure when you want it.</div>
+          <div class="alt-tools" style="font-style: normal; color: var(--mongo-green); opacity: 0.6;">MongoDB still fits ✓</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector"><span class="yes-pill">Yes</span></div>
+
+    <!-- Q2 -->
+    <div class="question-card">
+      <div class="step-num">Question 02</div>
+      <div class="question-text">Does your application need to perform well at scale?</div>
+      <div class="question-hint">Growing data volumes, increasing users, latency-sensitive operations, real-time responsiveness under load.</div>
+      <div class="answer-row">
+        <div class="answer-mongo">
+          <div class="mongo-icon">✓</div>
+          <div class="answer-content">
+            <div class="answer-label">Yes → MongoDB</div>
+            <div class="answer-text"><strong>Two dimensions of scalability:</strong> Data modelling ensures optimal read performance — data that is accessed together is stored together, eliminating expensive joins. Plus native horizontal scalability via sharding lets you scale out across commodity hardware as demand grows.</div>
+          </div>
+        </div>
+        <div class="answer-alt" style="background: rgba(0, 237, 100, 0.03); border-color: rgba(0, 237, 100, 0.1);">
+          <div class="alt-label" style="color: var(--text-secondary);">If No</div>
+          <div class="alt-text">SQLite or a simple RDBMS can handle small, fixed workloads — but MongoDB's Atlas free tier gives you the same simplicity with room to grow.</div>
+          <div class="alt-tools" style="font-style: normal; color: var(--mongo-green); opacity: 0.6;">MongoDB still fits ✓</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector"><span class="yes-pill">Yes</span></div>
+
+    <!-- Q3 -->
+    <div class="question-card">
+      <div class="step-num">Question 03</div>
+      <div class="question-text">Do you need flexibility in consistency vs. performance trade-offs?</div>
+      <div class="question-hint">Different operations have different requirements — some need strong consistency, others prioritise speed and availability.</div>
+      <div class="answer-row">
+        <div class="answer-mongo">
+          <div class="mongo-icon">✓</div>
+          <div class="answer-content">
+            <div class="answer-label">Yes → MongoDB</div>
+            <div class="answer-text"><strong>Tuneable consistency</strong> — configure read/write concerns per operation. Strong consistency for financial transactions, eventual consistency for high-throughput analytics. You decide, per query.</div>
+          </div>
+        </div>
+        <div class="answer-alt" style="background: rgba(0, 237, 100, 0.03); border-color: rgba(0, 237, 100, 0.1);">
+          <div class="alt-label" style="color: var(--text-secondary);">If No</div>
+          <div class="alt-text">A traditional RDBMS with fixed consistency works fine — but MongoDB's defaults give you strong consistency out of the box, with the flexibility there when you need it.</div>
+          <div class="alt-tools" style="font-style: normal; color: var(--mongo-green); opacity: 0.6;">MongoDB still fits ✓</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector"><span class="yes-pill">Yes</span></div>
+
+    <!-- Q4 -->
+    <div class="question-card">
+      <div class="step-num">Question 04</div>
+      <div class="question-text">Do you need ACID transactions across multiple records?</div>
+      <div class="question-hint">Financial operations, inventory management, multi-step workflows that must be atomic.</div>
+      <div class="answer-row">
+        <div class="answer-mongo">
+          <div class="mongo-icon">✓</div>
+          <div class="answer-content">
+            <div class="answer-label">Yes → MongoDB</div>
+            <div class="answer-text">Multi-document ACID transactions are built in since version 4.0. No need for a separate relational database for transactional workloads.</div>
+          </div>
+        </div>
+        <div class="answer-alt">
+          <div class="alt-label">If No</div>
+          <div class="alt-text">Single-document atomicity is sufficient — MongoDB handles this natively by default.</div>
+          <div class="alt-tools">Still MongoDB ✓</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector"><span class="yes-pill">Yes</span></div>
+
+    <!-- Q5 -->
+    <div class="question-card">
+      <div class="step-num">Question 05</div>
+      <div class="question-text">Do you need rich querying, aggregation, full-text search, or real-time analytics?</div>
+      <div class="question-hint">Complex filtering, text search, geospatial, time-series, vector search, change streams — within one platform.</div>
+      <div class="answer-row">
+        <div class="answer-mongo">
+          <div class="mongo-icon">✓</div>
+          <div class="answer-content">
+            <div class="answer-label">Yes → MongoDB</div>
+            <div class="answer-text">Atlas Search, aggregation pipelines, geospatial, time-series collections, vector search, and change streams — all unified in one platform. No bolt-on services required.</div>
+          </div>
+        </div>
+        <div class="answer-alt">
+          <div class="alt-label">If Niche Only</div>
+          <div class="alt-text">Purely dedicated search or analytics at extreme scale.</div>
+          <div class="alt-tools">Consider: Elasticsearch, Snowflake</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector"><span class="yes-pill">Yes</span></div>
+
+    <!-- Q6 -->
+    <div class="question-card">
+      <div class="step-num">Question 06</div>
+      <div class="question-text">Is this a highly connected graph traversal or extreme-scale OLAP workload?</div>
+      <div class="question-hint">Deep recursive graph queries (6+ hops) or petabyte-scale columnar analytics with star schemas.</div>
+      <div class="answer-row">
+        <div class="answer-mongo">
+          <div class="mongo-icon">✓</div>
+          <div class="answer-content">
+            <div class="answer-label">For most cases → MongoDB</div>
+            <div class="answer-text">$graphLookup handles moderate graph use cases. Atlas Data Federation and Charts cover most analytics needs. These edge cases represent a small fraction of workloads.</div>
+          </div>
+        </div>
+        <div class="answer-alt">
+          <div class="alt-label">Edge Cases</div>
+          <div class="alt-text">Deep recursive graph or petabyte OLAP.</div>
+          <div class="alt-tools">Consider: Neo4j, BigQuery, Snowflake</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Verdict -->
+  <div class="verdict" style="opacity: 0; transform: translateY(16px); animation: fadeSlideIn 0.5s ease 1.5s forwards;">
+    <div class="leaf">🍃</div>
+    <div class="stat-line">MongoDB is a General-Purpose Database Platform</div>
+    <p class="verdict-text">
+      For the vast majority of application workloads, <strong>MongoDB</strong> is the right choice — combining schema flexibility for rapid feature delivery, optimal performance through intelligent data modelling, horizontal scalability, tuneable consistency, and a rich unified query platform.
+    </p>
+    <p class="verdict-text" style="font-size: 13.5px; color: var(--text-secondary);">
+      Specialised databases like Neo4j (deep graph), Snowflake (petabyte OLAP), and Elasticsearch (dedicated search) serve legitimate niche use cases. But most teams overestimate their need for these tools and underestimate the cost of managing multiple database platforms.
+    </p>
+    <div class="footnote">
+      The question isn't <em>"Can MongoDB do this?"</em> — it's <em>"Why wouldn't you start here?"</em><br>
+      When your requirements are general-purpose, your database should be too.
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
